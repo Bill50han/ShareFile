@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35728.132
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wKernel", "wKernel\wKernel.vcxproj", "{95B26145-7729-43CA-A93B-A3CBCD5DC46B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{8E45929A-78BB-4B08-86BD-CA948B1A1E17}"
+	ProjectSection(SolutionItems) = preProject
+		design.txt = design.txt
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Debug|ARM64.Build.0 = Debug|ARM64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Debug|x64.ActiveCfg = Debug|x64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Debug|x64.Build.0 = Debug|x64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Debug|x64.Deploy.0 = Debug|x64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|ARM64.ActiveCfg = Release|ARM64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|ARM64.Build.0 = Release|ARM64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|ARM64.Deploy.0 = Release|ARM64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|x64.ActiveCfg = Release|x64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|x64.Build.0 = Release|x64
+		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|x64.Deploy.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

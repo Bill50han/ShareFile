@@ -1,0 +1,36 @@
+文件名前加小项目标识
+
+wK：
+负责过滤，将操作转发给UCLI，从UGUI接收需转发的文件路径
+两个类
+KCommunication：与用户态通信（CLI与GUI）（常规通信与报告错误）
+	用处
+		收用户态的add、del、isIn请求
+		发filter的结果
+		发报错
+	成员
+		报文结构
+		初始化与（dis）ConnectNotifyCallback
+		收（回调，直接处理不再抽象）
+		发（普通，被细化功能的函数调用）
+		发结果
+		发报错
+Database：存储、判断要同步的路径
+	双向链表，包含字符串和hash（user下用stdhash之类的算好了发上来）hash为了快速删除
+	add：增加一个
+	check：检查符不符合
+	del：删除hash对应的
+	isIn：查找有无hash
+Filter不建类，只是函数集
+
+wU-CLI：
+负责接收wK传来的操作，并用udp发出去；负责接收udp来的操作，并执行
+四个类
+UCCommunication：与内核态通信（收），传给UServer
+UServer：记录到链上，udp发出去
+UClient：接收udp，记录到链上，并执行操作
+BlockChain：区块链的建立，增加，导出
+
+wU-GUI：
+负责提供图形化管理界面，配置需要转发的文件路径，udp传输相关。
+UGCommunication：与内核态通信（发）
