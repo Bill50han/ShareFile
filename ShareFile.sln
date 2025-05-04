@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决�
 		design.txt = design.txt
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wU-CLI", "wU-CLI\wU-CLI.vcxproj", "{33F56361-4239-4205-80C8-808C4EBDF8B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -30,8 +32,19 @@ Global
 		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|x64.ActiveCfg = Release|x64
 		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|x64.Build.0 = Release|x64
 		{95B26145-7729-43CA-A93B-A3CBCD5DC46B}.Release|x64.Deploy.0 = Release|x64
+		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Debug|ARM64.ActiveCfg = Debug|x64
+		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Debug|ARM64.Build.0 = Debug|x64
+		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Debug|x64.ActiveCfg = Debug|x64
+		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Debug|x64.Build.0 = Debug|x64
+		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Release|ARM64.ActiveCfg = Release|x64
+		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Release|ARM64.Build.0 = Release|x64
+		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Release|x64.ActiveCfg = Release|x64
+		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B8E74BE3-DB78-4413-BD5D-9904B8D24DFA}
 	EndGlobalSection
 EndGlobal

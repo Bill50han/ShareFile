@@ -32,9 +32,38 @@ void KCommunication::Close()
 	}
 }
 
+//发给Cli
 sfresult KCommunication::SendKCommMessage(PMessage message)
 {
+    if (!MFCommServerPort) return R_NO_CONNECTION;
+    if (!CClientPort) return R_NO_CONNECTION;
+    PMessage reply = (PMessage)ExAllocatePoolUninitialized(PagedPool, sizeof(Message), 'rMsg');
+    if (!reply) return R_BAD_ALLOC;
+    RtlZeroMemory(reply, sizeof(Message));
 
+    ULONG lreply = sizeof(Message);
+    LARGE_INTEGER timeout = { 0 };
+    timeout.QuadPart = -20'000'000; //2秒后超时
+
+    NTSTATUS s = FltSendMessage(gFilterHandle, &CClientPort, message, (ULONG)message->size, reply, &lreply, &timeout);
+    if (s != STATUS_SUCCESS)
+    {
+        ExFreePoolWithTag(reply, 'rMsg');
+        switch (s)
+        {
+        case STATUS_INSUFFICIENT_RESOURCES:
+            return R_BAD_ALLOC;
+        case STATUS_PORT_DISCONNECTED:
+        case STATUS_THREAD_IS_TERMINATING:
+        case STATUS_TIMEOUT:
+            return R_NO_CONNECTION;
+        }
+        return R_UNSUCCESS;
+    }
+
+    sfresult r = reply->ResultAndError.result;
+    ExFreePoolWithTag(reply, 'rMsg');
+    return r;
 }
 
 NTSTATUS
@@ -49,9 +78,10 @@ KCommunication::MessageNotifyCallback(
 {
     UNREFERENCED_PARAMETER(PortCookie);
 
-    //TODO: add try catch
     __try
     {
+        ProbeForRead(InputBuffer, InputBufferLength, sizeof(ULONG));
+        ProbeForWrite(OutputBuffer, OutputBufferLength, sizeof(ULONG));
         if (InputBufferLength != sizeof(Message) || InputBuffer == NULL || OutputBufferLength != sizeof(Message) || OutputBuffer == NULL)
         {
             if (OutputBufferLength == sizeof(Message) && OutputBuffer != NULL)
@@ -100,6 +130,7 @@ KCommunication::MessageNotifyCallback(
         *ReturnOutputBufferLength = sizeof(Message);
     } __except (EXCEPTION_EXECUTE_HANDLER)
     {
+        DbgPrint("[ERROR] in MessageNotifyCallback: %lu\n", GetExceptionCode());
         return GetExceptionCode();
     }
 
@@ -112,7 +143,19 @@ KCommunication::DisconnectNotifyCallback(
 )
 {
     PCLIENT_PORT_CONTEXT context = (PCLIENT_PORT_CONTEXT)ConnectionCookie;
-    ExFreePoolWithTag(context, 'hCli');
+    if (context != NULL)
+    {
+        if (context->ClientPort == GetInstance().CClientPort)
+        {
+            GetInstance().CClientPort = NULL;
+        }
+        else if (context->ClientPort == GetInstance().GClientPort)
+        {
+            GetInstance().GClientPort = NULL;
+        }
+        FltCloseClientPort(gFilterHandle, &(context->ClientPort));
+        ExFreePoolWithTag(context, 'hCli');
+    }
 }
 
 NTSTATUS
@@ -125,8 +168,26 @@ KCommunication::ConnectNotifyCallback(
 )
 {
     UNREFERENCED_PARAMETER(ServerPortCookie);
-    UNREFERENCED_PARAMETER(ConnectionContext);
-    UNREFERENCED_PARAMETER(SizeOfContext);
+
+    if (SizeOfContext > 0)
+    {
+        if (*(char*)ConnectionContext == 'C')
+        {
+            GetInstance().CClientPort = ClientPort;
+        }
+        else if (*(char*)ConnectionContext == 'G')
+        {
+            GetInstance().GClientPort = ClientPort;
+        }
+        else
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     PCLIENT_PORT_CONTEXT context;
 
@@ -137,6 +198,8 @@ KCommunication::ConnectNotifyCallback(
 
     context->ClientPort = ClientPort;
     *ConnectionCookie = context;
+
+    
 
     return STATUS_SUCCESS;
 }
