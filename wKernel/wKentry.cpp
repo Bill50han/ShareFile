@@ -1,5 +1,6 @@
 #include "wKFilters.h"
 #include "wKKComm.h"
+#include "wKDatabase.h"
 #define NOINF
 
 #ifdef NOINF
@@ -92,9 +93,11 @@ extern "C" NTSTATUS DriverEntry(
         return status;
     }
     status = KCommunication::GetInstance().Init();
+    Database::GetInstance().Init();
     if (NT_SUCCESS(status)) 
     {
         status = FltStartFiltering(gFilterHandle);
+        //Database::GetInstance().Lock<add_l>(L"\\Device\\HarddiskVolume1\\a.txt", 58, 111);
         if (!NT_SUCCESS(status)) 
         {
             KCommunication::GetInstance().Close();

@@ -8,8 +8,17 @@ NTSTATUS KCommunication::Init()
     NTSTATUS status;
     UNICODE_STRING portName = RTL_CONSTANT_STRING(L"\\SFKCommMFPort");
     OBJECT_ATTRIBUTES portOA;
+    PSECURITY_DESCRIPTOR sd;
 
-    InitializeObjectAttributes(&portOA, &portName, OBJ_KERNEL_HANDLE, NULL, NULL);
+    status = FltBuildDefaultSecurityDescriptor(&sd, FLT_PORT_ALL_ACCESS);
+
+    if (!NT_SUCCESS(status))
+    {
+        DbgPrint("[FATAL] FltBuildDefaultSecurityDescriptor %X", status);
+        return status;
+    }
+
+    InitializeObjectAttributes(&portOA, &portName, OBJ_KERNEL_HANDLE, NULL, sd);
 
     status = FltCreateCommunicationPort(
         gFilterHandle,
@@ -78,14 +87,16 @@ KCommunication::MessageNotifyCallback(
 {
     UNREFERENCED_PARAMETER(PortCookie);
 
+    //__debugbreak();
+
     __try
     {
         ProbeForRead(InputBuffer, InputBufferLength, sizeof(ULONG));
-        ProbeForWrite(OutputBuffer, OutputBufferLength, sizeof(ULONG));
-        if (InputBufferLength != sizeof(Message) || InputBuffer == NULL || OutputBufferLength != sizeof(Message) || OutputBuffer == NULL)
+        if (InputBufferLength < sizeof(Message) || InputBuffer == NULL || OutputBufferLength < sizeof(Message) || OutputBuffer == NULL)
         {
-            if (OutputBufferLength == sizeof(Message) && OutputBuffer != NULL)
+            if (OutputBufferLength >= sizeof(Message) && OutputBuffer != NULL)
             {
+                ProbeForWrite(OutputBuffer, OutputBufferLength, sizeof(ULONG));
                 ((PMessage)OutputBuffer)->size = sizeof(Message);
                 ((PMessage)OutputBuffer)->type = M_RESULT;
                 ((PMessage)OutputBuffer)->ResultAndError.result = R_INVALID_LENGTH;
@@ -98,32 +109,40 @@ KCommunication::MessageNotifyCallback(
                 return STATUS_SUCCESS;
             }
         }
+        PMessage buffer = (PMessage)ExAllocatePoolUninitialized(NonPagedPool, InputBufferLength, 'bMsg');
+        if (buffer == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        memcpy(buffer, InputBuffer, InputBufferLength);
         sfresult r = R_OK;
 
-        switch (((PMessage)InputBuffer)->type)
+        switch (buffer->type)
         {
         case M_RESULT:
             r = R_OK;
             break;
 
         case M_ADD_PATH:
-            r = Database::GetInstance().Lock<add_l>(((PMessage)InputBuffer)->AddPath.path,
-                ((PMessage)InputBuffer)->AddPath.length,
-                ((PMessage)InputBuffer)->AddPath.hash);
+            r = Database::GetInstance().Lock<add_l>(buffer->AddPath.path,
+                buffer->AddPath.length,
+                buffer->AddPath.hash);
             break;
 
         case M_DEL_PATH:
-            r = Database::GetInstance().Lock<del_l>(((PMessage)InputBuffer)->DelPath.hash);
+            r = Database::GetInstance().Lock<del_l>(buffer->DelPath.hash);
             break;
 
         case M_QUERY_PATH:
-            r = Database::GetInstance().Lock<isIn_l>(((PMessage)InputBuffer)->DelPath.hash);
+            r = Database::GetInstance().Lock<isIn_l>(buffer->QueryPath.hash);
             break;
 
         default:
             r = R_ERROR_FUNC;
         }
+        ExFreePoolWithTag(buffer, 'bMsg');
 
+        ProbeForWrite(OutputBuffer, OutputBufferLength, sizeof(ULONG));
         ((PMessage)OutputBuffer)->size = sizeof(Message);
         ((PMessage)OutputBuffer)->type = M_RESULT;
         ((PMessage)OutputBuffer)->ResultAndError.result = r;

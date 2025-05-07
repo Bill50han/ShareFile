@@ -5,7 +5,8 @@ Database Database::instance;
 
 void Database::Init()
 {
-	KeInitializeSpinLock(&lHead);
+	KdPrint(("Database head: %p\n", &head));
+	//KeInitializeSpinLock(&lHead);
 }
 
 sfresult Database::add(const wchar_t* path, size_t size, size_t hash)
@@ -16,7 +17,7 @@ sfresult Database::add(const wchar_t* path, size_t size, size_t hash)
 		last = last->next;
 	}
 
-	PathList* now = (PathList*)ExAllocatePoolUninitialized(NonPagedPool, size + sizeof(PathList) + CmpMemorySize, 'PL');
+	PathList* now = (PathList*)ExAllocatePoolUninitialized(NonPagedPool, size + sizeof(L'\0') + sizeof(PathList) + CmpMemorySize, 'PL');
 	if (now == NULL)
 	{
 		return R_BAD_ALLOC;
@@ -24,7 +25,7 @@ sfresult Database::add(const wchar_t* path, size_t size, size_t hash)
 	last->next = now;
 	now->pre = last;
 	now->next = nullptr;
-	now->size = size + sizeof(PathList);
+	now->size = size + sizeof(L'\0') + sizeof(PathList);
 	now->hash = hash;
 	
 	wcscpy(now->path, path);
@@ -38,7 +39,7 @@ sfresult Database::check(const wchar_t* path, size_t size)
 	PathList* now = head.next;
 	while (now)
 	{
-		if (cmp(now->path, now->size - sizeof(PathList), path, size))
+		if (cmp(now->path, now->size - sizeof(PathList) - sizeof(L'\0'), path, size))
 		{
 			return R_FIND_PATH;
 		}

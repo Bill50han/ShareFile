@@ -36,7 +36,6 @@ FLT_PREOP_CALLBACK_STATUS PreCreateCallback(
     _Flt_CompletionContext_Outptr_ PVOID* CompletionContext
 ) 
 {
-    UNREFERENCED_PARAMETER(FltObjects);
 
     //if (FlagOn(Data->Iopb->Parameters.Create.Options, FILE_CREATE)) 
     {
@@ -47,38 +46,54 @@ FLT_PREOP_CALLBACK_STATUS PreCreateCallback(
             FltParseFileNameInformation(fileNameInfo);
             if (Database::GetInstance().Lock<check_l>(fileNameInfo->Name.Buffer, fileNameInfo->Name.Length) == R_FIND_PATH)
             {
-                DbgPrint("[CREATE] File: %wZ\n", &fileNameInfo->Name);
+                DbgPrint("[CREATE] File: %wZ IRP Flags: 0x%x IRQL: %x Create Flags: %x\n", &fileNameInfo->Name, Data->Iopb->IrpFlags, KeGetCurrentIrql(), Data->Iopb->Parameters.Create.Options);
 
-                PMessage msg = (PMessage)ExAllocatePoolUninitialized(NonPagedPool, sizeof(Message) + fileNameInfo->Name.Length + sizeof(L'\0') + Data->Iopb->Parameters.Create.EaLength + sizeof(L'\0'), 'sMsg');
-                if (msg == NULL)
+                //__try
                 {
-                    DbgPrint("[FATAL] No Memory\n");
-                    CompletionContext = NULL;
-                    return FLT_PREOP_SUCCESS_NO_CALLBACK;
+                    PMessage msg = (PMessage)FltAllocatePoolAlignedWithTag(FltObjects->Instance, NonPagedPool, sizeof(Message) + fileNameInfo->Name.Length + sizeof(L'\0') + Data->Iopb->Parameters.Create.EaLength + sizeof(L'\0'), 'sMsg');
+                    if (msg == NULL)
+                    {
+                        DbgPrint("[FATAL] No Memory\n");
+                        CompletionContext = NULL;
+                        return FLT_PREOP_SUCCESS_NO_CALLBACK;
+                    }
+                    msg->size = sizeof(Message) + fileNameInfo->Name.Length + sizeof(L'\0') + Data->Iopb->Parameters.Create.EaLength + sizeof(L'\0');
+                    msg->type = M_FILE_CREATE;
+
+                    msg->Create.DesiredAccess = Data->Iopb->Parameters.Create.SecurityContext->DesiredAccess;
+                    msg->Create.AllocationSize.QuadPart = Data->Iopb->Parameters.Create.AllocationSize.QuadPart;
+                    msg->Create.FileAttributes = Data->Iopb->Parameters.Create.FileAttributes;
+                    msg->Create.ShareAccess = Data->Iopb->Parameters.Create.ShareAccess;
+                    msg->Create.CreateOptions = Data->Iopb->Parameters.Create.Options & 0xFF'FFFF;
+                    msg->Create.CreateDisposition = (Data->Iopb->Parameters.Create.Options >> 24) & 0xFF;
+                    msg->Create.EaLength = Data->Iopb->Parameters.Create.EaLength;
+
+                    memcpy(msg->Create.PathAndEaBuffer, fileNameInfo->Name.Buffer, fileNameInfo->Name.Length);
+                    msg->Create.PathAndEaBuffer[fileNameInfo->Name.Length] = 0;
+                    msg->Create.PathAndEaBuffer[fileNameInfo->Name.Length + 1] = 0;
+
+                    msg->Create.EaOffset = fileNameInfo->Name.Length + sizeof(L'\0');
+                    memcpy(msg->Create.PathAndEaBuffer + fileNameInfo->Name.Length + sizeof(L'\0'), Data->Iopb->Parameters.Create.EaBuffer, Data->Iopb->Parameters.Create.EaLength);
+
+                    KCommunication::GetInstance().KCommunication::SendKCommMessage(msg);
+
+                    FltFreePoolAlignedWithTag(FltObjects->Instance, msg, 'sMsg');
                 }
-                msg->size = sizeof(Message) + fileNameInfo->Name.Length + sizeof(L'\0') + Data->Iopb->Parameters.Create.EaLength + sizeof(L'\0');
-                msg->type = M_FILE_CREATE;
-
-                msg->Create.DesiredAccess = Data->Iopb->Parameters.Create.SecurityContext->DesiredAccess;
-                msg->Create.AllocationSize.QuadPart = Data->Iopb->Parameters.Create.AllocationSize.QuadPart;
-                msg->Create.FileAttributes = Data->Iopb->Parameters.Create.FileAttributes;
-                msg->Create.ShareAccess = Data->Iopb->Parameters.Create.ShareAccess;
-                msg->Create.CreateOptions = Data->Iopb->Parameters.Create.Options & 0xFF'FFFF;
-                msg->Create.CreateDisposition = (Data->Iopb->Parameters.Create.Options >> 24) & 0xFF;
-                msg->Create.EaLength = Data->Iopb->Parameters.Create.EaLength;
-
-                memcpy(msg->Create.PathAndEaBuffer, fileNameInfo->Name.Buffer, fileNameInfo->Name.Length);
-                msg->Create.PathAndEaBuffer[fileNameInfo->Name.Length] = 0;
-                msg->Create.PathAndEaBuffer[fileNameInfo->Name.Length + 1] = 0;
-
-                msg->Create.EaOffset = fileNameInfo->Name.Length + sizeof(L'\0');
-                memcpy(msg->Create.PathAndEaBuffer + fileNameInfo->Name.Length + sizeof(L'\0'), Data->Iopb->Parameters.Create.EaBuffer, Data->Iopb->Parameters.Create.EaLength);
-
-                KCommunication::GetInstance().KCommunication::SendKCommMessage(msg);
-
-                ExFreePoolWithTag(msg, 'sMsg');
+                //__except (EXCEPTION_EXECUTE_HANDLER)
+                //{
+                    //DbgPrint("[ERROR] in create: %lu\n", GetExceptionCode());
+                //}
             }
-            FltReleaseFileNameInformation(fileNameInfo);
+            __try
+            {
+                FltReleaseFileNameInformation(fileNameInfo);
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER)
+            {
+                DbgPrint("[ERROR] in create.FltReleaseFileName: %lu\n", GetExceptionCode());
+                CompletionContext = NULL;
+                return FLT_PREOP_SUCCESS_NO_CALLBACK;
+            }
         }
     }
     CompletionContext = NULL;
@@ -125,7 +140,16 @@ FLT_PREOP_CALLBACK_STATUS PreSetInformationCallback(
 
                     ExFreePoolWithTag(msg, 'sMsg');
                 }
-                FltReleaseFileNameInformation(fileNameInfo);
+                __try
+                {
+                    FltReleaseFileNameInformation(fileNameInfo);
+                }
+                __except (EXCEPTION_EXECUTE_HANDLER)
+                {
+                    DbgPrint("[ERROR] in del.FltReleaseFileName: %lu\n", GetExceptionCode());
+                    CompletionContext = NULL;
+                    return FLT_PREOP_SUCCESS_NO_CALLBACK;
+                }
             }
         }
     }
@@ -140,6 +164,11 @@ FLT_PREOP_CALLBACK_STATUS PreWriteCallback(
 ) 
 {
     UNREFERENCED_PARAMETER(FltObjects);
+
+    if (FlagOn(Data->Iopb->IrpFlags, IRP_PAGING_IO))
+    {
+        goto exit;
+    }
 
     ULONG length = Data->Iopb->Parameters.Write.Length;
     LONGLONG offset = Data->Iopb->Parameters.Write.ByteOffset.QuadPart;
@@ -159,11 +188,12 @@ FLT_PREOP_CALLBACK_STATUS PreWriteCallback(
     if (buffer) {
         PFLT_FILE_NAME_INFORMATION nameInfo;
         NTSTATUS status = FltGetFileNameInformation(Data, FLT_FILE_NAME_NORMALIZED, &nameInfo);
-        if (NT_SUCCESS(status)) {
+        if (NT_SUCCESS(status)) 
+        {
             FltParseFileNameInformation(nameInfo);
             if (Database::GetInstance().Lock<check_l>(nameInfo->Name.Buffer, nameInfo->Name.Length) == R_FIND_PATH)
             {
-                DbgPrint("[WRITE] File: %wZ, Offset: %lld, Length: %lu\n", &nameInfo->Name, offset, length);
+                DbgPrint("[WRITE] File: %wZ, Offset: %lld, Length: %lu IRP Flags: 0x%x\n", &nameInfo->Name, offset, length, Data->Iopb->IrpFlags);
 
                 PMessage msg = (PMessage)ExAllocatePoolUninitialized(NonPagedPool, sizeof(Message) + nameInfo->Name.Length + sizeof(L'\0') + Data->Iopb->Parameters.Write.Length + sizeof(L'\0'), 'sMsg');
                 if (msg == NULL)
@@ -173,7 +203,7 @@ FLT_PREOP_CALLBACK_STATUS PreWriteCallback(
                     return FLT_PREOP_SUCCESS_NO_CALLBACK;
                 }
                 msg->size = sizeof(Message) + nameInfo->Name.Length + sizeof(L'\0') + Data->Iopb->Parameters.Write.Length + sizeof(L'\0');
-                msg->type = M_FILE_CREATE;
+                msg->type = M_FILE_WRITE;
 
                 msg->Write.Length = Data->Iopb->Parameters.Write.Length;
                 msg->Write.Key = Data->Iopb->Parameters.Write.Key;
@@ -185,12 +215,24 @@ FLT_PREOP_CALLBACK_STATUS PreWriteCallback(
 
                 msg->Write.WriteOffset = nameInfo->Name.Length + sizeof(L'\0');
                 memcpy(msg->Write.PathAndWriteBuffer + nameInfo->Name.Length + sizeof(L'\0'), buffer, Data->Iopb->Parameters.Write.Length);
+                msg->Write.PathAndWriteBuffer[msg->size - 1] = 0;
+                msg->Write.PathAndWriteBuffer[msg->size - 2] = 0;
 
                 KCommunication::GetInstance().KCommunication::SendKCommMessage(msg);
 
-                ExFreePoolWithTag(msg, 'sMsg');
+                __try
+                {
+                    ExFreePoolWithTag(msg, 'sMsg');
+                }
+                __except (EXCEPTION_EXECUTE_HANDLER)
+                {
+                    DbgPrint("[ERROR] in write.ExFreePool: %lu\n", GetExceptionCode());
+                    CompletionContext = NULL;
+                    return FLT_PREOP_SUCCESS_NO_CALLBACK;
+                }
             }
             FltReleaseFileNameInformation(nameInfo);
+            
         }
 
         // 打印前 16 字节（示例）
