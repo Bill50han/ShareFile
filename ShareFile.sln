@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决�
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wU-CLI", "wU-CLI\wU-CLI.vcxproj", "{33F56361-4239-4205-80C8-808C4EBDF8B9}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wU-GUI", "wU-GUI\wU-GUI.vcxproj", "{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -40,6 +42,14 @@ Global
 		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Release|ARM64.Build.0 = Release|x64
 		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Release|x64.ActiveCfg = Release|x64
 		{33F56361-4239-4205-80C8-808C4EBDF8B9}.Release|x64.Build.0 = Release|x64
+		{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}.Debug|ARM64.ActiveCfg = Debug|x64
+		{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}.Debug|ARM64.Build.0 = Debug|x64
+		{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}.Debug|x64.ActiveCfg = Debug|x64
+		{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}.Debug|x64.Build.0 = Debug|x64
+		{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}.Release|ARM64.ActiveCfg = Release|x64
+		{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}.Release|ARM64.Build.0 = Release|x64
+		{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}.Release|x64.ActiveCfg = Release|x64
+		{B3407D6A-D9A2-42DA-BD8A-4ADA7EDDF91F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

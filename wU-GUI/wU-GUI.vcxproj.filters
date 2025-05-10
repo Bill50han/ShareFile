@@ -15,27 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="wUNetwork.cpp">
+    <ClCompile Include="wUGentry.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="wUCComm.cpp">
+    <ClCompile Include="wUGComm.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="wUCentry.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="USFLog.h">
+    <ClCompile Include="wUGManager.h">
       <Filter>头文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="wUCComm.h">
+    <ClInclude Include="wUGComm.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="wUNetwork.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="USFMessage.h">
+    <ClInclude Include="..\wU-CLI\USFMessage.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

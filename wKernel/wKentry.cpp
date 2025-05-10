@@ -77,6 +77,15 @@ NTSTATUS PrepMiniFilter(IN PUNICODE_STRING reg_path, IN PWSTR altiude)
 }
 #endif // NOINF
 
+VOID
+DriverUnload(
+    _In_ struct _DRIVER_OBJECT* DriverObject
+)
+{
+    KCommunication::GetInstance().Close();
+    FltUnregisterFilter(gFilterHandle);
+}
+
 extern "C" NTSTATUS DriverEntry(
     _In_ PDRIVER_OBJECT DriverObject,
     _In_ PUNICODE_STRING RegistryPath
@@ -87,6 +96,8 @@ extern "C" NTSTATUS DriverEntry(
 #elif
     UNREFERENCED_PARAMETER(RegistryPath);
 #endif // NOINF
+
+    DriverObject->DriverUnload = DriverUnload;
     
     NTSTATUS status = FltRegisterFilter(DriverObject, &FilterRegistration, &gFilterHandle);
     if (!NT_SUCCESS(status)) {

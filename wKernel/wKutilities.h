@@ -7,7 +7,7 @@ void* operator new(size_t size);
 void operator delete(void* p);
 
 
-enum sfresult
+enum sfresult : ULONG
 {
 	R_OK,
 	R_FIND_PATH = R_OK,
