@@ -1,0 +1,6 @@
+C:\Users\90722\source\repos\ShareFile\wU-CLI\wUCentry.cpp:11 [int __cdecl main(void)] Begin!
+C:\Users\90722\source\repos\ShareFile\wU-CLI\wUCComm.cpp:10 [int __cdecl UCommunication::Start(void)] 连接到驱动端口
+C:\Users\90722\source\repos\ShareFile\wU-CLI\wUCComm.cpp:21 [int __cdecl UCommunication::Start(void)] 连接失败 错误码: 0x80070002
+C:\Users\90722\source\repos\ShareFile\wU-CLI\wUCentry.cpp:11 [int __cdecl main(void)] Begin!
+C:\Users\90722\source\repos\ShareFile\wU-CLI\wUCComm.cpp:10 [int __cdecl UCommunication::Start(void)] 连接到驱动端口
+C:\Users\90722\source\repos\ShareFile\wU-CLI\wUCComm.cpp:21 [int __cdecl UCommunication::Start(void)] 连接失败 错误码: 0x80070002

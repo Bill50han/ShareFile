@@ -1,0 +1,28 @@
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:142 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:176 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:175 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:175 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:175 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:175 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:175 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:175 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:175 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:176 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:176 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGentry.cpp:176 [int __cdecl wWinMain(struct HINSTANCE__ *,struct HINSTANCE__ *,wchar_t *,int)] GUI 退出: 0
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:76 [int __cdecl WatchDog::InstallDriver(void)] 开始安装 wKernel
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:101 [int __cdecl WatchDog::InstallDriver(void)] OpenSCManager成功
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:122 [int __cdecl WatchDog::InstallDriver(void)] 服务创建失败，是由于服务已经创立过
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:200 [int __cdecl WatchDog::StartDriver(void)] 开始启动 wKernel
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:228 [int __cdecl WatchDog::StartDriver(void)] 启动wKernel服务失败 0x2
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:31 [unsigned long __cdecl WatchDog::RunAndGetExitCode(const class std::basic_string<wchar_t,struct std::char_traits<wchar_t>,class std::allocator<wchar_t> > &,unsigned long)] 启动cli
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:249 [int __cdecl WatchDog::StopDriver(void)] 开始停止 wKernel
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:279 [int __cdecl WatchDog::StopDriver(void)] wKernel 停止成功
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:76 [int __cdecl WatchDog::InstallDriver(void)] 开始安装 wKernel
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:101 [int __cdecl WatchDog::InstallDriver(void)] OpenSCManager成功
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:122 [int __cdecl WatchDog::InstallDriver(void)] 服务创建失败，是由于服务已经创立过
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:200 [int __cdecl WatchDog::StartDriver(void)] 开始启动 wKernel
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:228 [int __cdecl WatchDog::StartDriver(void)] 启动wKernel服务失败 0x2
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:31 [unsigned long __cdecl WatchDog::RunAndGetExitCode(const class std::basic_string<wchar_t,struct std::char_traits<wchar_t>,class std::allocator<wchar_t> > &,unsigned long)] 启动cli
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:249 [int __cdecl WatchDog::StopDriver(void)] 开始停止 wKernel
+C:\Users\90722\source\repos\ShareFile\wU-GUI\wUGManager.h:279 [int __cdecl WatchDog::StopDriver(void)] wKernel 停止成功

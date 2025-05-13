@@ -7,6 +7,8 @@
 #include <atomic>
 #include <vector>
 #include <string>
+#include <fstream>
+#include <locale>
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
@@ -31,7 +33,7 @@ private:
     SOCKET m_sendSock = INVALID_SOCKET;
     SOCKET m_recvSock = INVALID_SOCKET;
     int m_port;
-    char* AdapterName = NULL;
+    wchar_t* AdapterFriendlyName = NULL;
 
     //µ¥ÀýÄ£Ê½
     UNetwork(int port = 12345) : m_port(port), m_running(false)

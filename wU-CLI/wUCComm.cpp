@@ -39,7 +39,7 @@ void UCommunication::MessageThreadProc()
 
     while (TRUE)
     {
-        //Log("循环线程");
+        Log("MessageThreadProc");
         OVERLAPPED Ovlp;
 
         HRESULT hr = FilterGetMessage(
@@ -75,6 +75,7 @@ void UCommunication::MessageThreadProc()
         case M_FILE_WRITE:
         case M_FILE_DEL:
         {
+            Log("收到mf通知的文件操作");
             int r = UNetwork::GetInstance().Broadcast(pMsg);
             if (SOCKET_ERROR == r)
             {

@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <windowsx.h>
 #include <shellscalingapi.h>
+#include <tlhelp32.h>
 #include <Commctrl.h>
 #pragma comment(lib, "Shcore.lib")
 #include <Shobjidl.h>
@@ -55,7 +56,7 @@ std::hash<std::wstring> sHash;
 std::map<size_t, std::wstring> PathMap;
 std::atomic_bool running = false;
 
-void InitGlobalFont() 
+void InitGlobalFont()
 {
     LOGFONT lf = { 0 };
     lf.lfHeight = -12;                     // 高度（负数表示按字符高度匹配）
@@ -64,15 +65,15 @@ void InitGlobalFont()
     wcscpy_s(lf.lfFaceName, LF_FACESIZE, L"微软雅黑"); // 字体名称
 
     g_hFont = CreateFontIndirect(&lf);
-    if (!g_hFont) 
+    if (!g_hFont)
     {
         MessageBox(NULL, L"字体创建失败！", L"错误", MB_ICONERROR);
     }
 }
-void SetChildFont(HWND hParent, HFONT hFont) 
+void SetChildFont(HWND hParent, HFONT hFont)
 {
     HWND hChild = GetWindow(hParent, GW_CHILD);
-    while (hChild) 
+    while (hChild)
     {
         SendMessage(hChild, WM_SETFONT, (WPARAM)hFont, TRUE);
         hChild = GetWindow(hChild, GW_HWNDNEXT);
@@ -89,6 +90,34 @@ std::wstring Dos2NTPath(const std::wstring inpt)
     return target + inpt.substr(2);
 }
 
+BOOL IsProcessRunning(const WCHAR* processName) {
+    BOOL exists = FALSE;
+    PROCESSENTRY32W entry;
+    entry.dwSize = sizeof(PROCESSENTRY32);
+
+    // 创建进程快照
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE) {
+        Log("快照创建失败，错误: %X\n", GetLastError());
+        return FALSE;
+    }
+
+    // 遍历进程列表
+    if (Process32FirstW(snapshot, &entry)) {
+        do {
+            // 比较进程名（不区分大小写）
+            if (wcscmp(entry.szExeFile, processName) == 0) {
+                Log("找到进程");
+                exists = TRUE;
+                break;
+            }
+        } while (Process32NextW(snapshot, &entry));
+    }
+
+    CloseHandle(snapshot);
+    return exists;
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -97,6 +126,35 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     setlocale(LC_ALL, "");
     InitGlobalFont();
     SetProcessDpiAwareness(PROCESS_DPI_UNAWARE);
+
+    std::wfstream loadpath("path.conf", std::ios::in);
+    if (loadpath.is_open())
+    {
+        loadpath.imbue(std::locale(std::locale(), "", LC_CTYPE));
+
+        while (1)
+        {
+            std::wstring t;
+            size_t h = 0;
+
+            loadpath >> h;
+            if (h == 0 || loadpath.eof() || loadpath.peek() == EOF)
+            {
+                break;
+            }
+            loadpath.ignore();
+            std::getline(loadpath, t);
+            PathMap[h] = t;
+        }
+
+        loadpath.flush();
+        loadpath.close();
+    }
+
+    if (IsProcessRunning(L"wU-CLI.exe"))
+    {
+        running = true;
+    }
 
     WNDCLASSW wc = { 0 };
 
@@ -138,6 +196,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
 
     DeleteObject(g_hFont);
+
+    std::wfstream savepath("path.conf", std::ios::out | std::ios::trunc);
+    savepath.imbue(std::locale(std::locale(), "", LC_CTYPE));
+    for (const auto& i : PathMap)
+    {
+        savepath << i.first << L" " << i.second << L"\n";
+    }
+    savepath << 0;
+    savepath.flush();
+    savepath.close();
+
+    Log("GUI 退出: %X", (int)msg.wParam);
 
     return (int)msg.wParam;
 }
@@ -181,7 +251,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             (HMENU)IDC_ADAPTER_COMBOBOX,            // 控件ID
             hInst,                       // 程序实例句柄
             NULL
-        ); 
+        );
         ComboBox_SetCueBannerText(hComboAdapter, L"请选择活动的网络适配器");
         ShowAdaptersOnComboBox(hComboAdapter);
 
@@ -212,6 +282,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             hWnd, (HMENU)IDC_PATH_LISTBOX_DEL, hInst, NULL
         );
 
+        if (PathMap.size() > 0)
+        {
+            for (const auto& i : PathMap)
+            {
+                ListBox_AddString(hListPath, i.second.c_str());
+            }
+        }
+
+        std::wstring buffer;
+        std::wfstream o("adapter.conf", std::ios::in);
+        if (o.is_open())
+        {
+            o.imbue(std::locale(std::locale(), "", LC_CTYPE));
+            std::getline(o, buffer);
+            o.close();
+
+            int ind = ComboBox_FindString(hComboAdapter, -1, buffer.c_str());
+            if (ind != CB_ERR)
+            {
+                ComboBox_SetCurSel(hComboAdapter, ind);
+            }
+        }
+
         SetChildFont(hWnd, g_hFont);
         break;
     }
@@ -231,7 +324,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (HIWORD(wParam) == CBN_SELCHANGE)
             {
                 int index = ComboBox_GetCurSel(hComboAdapter);
-                if (index != CB_ERR) 
+                if (index != CB_ERR)
                 {
                     WCHAR* buffer = new WCHAR[ComboBox_GetLBTextLen(hComboAdapter, index) + 1];
                     ComboBox_GetLBText(hComboAdapter, index, buffer);
@@ -276,17 +369,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if (ListBox_FindString(hListPath, -1, pszFilePath) == LB_ERR)
                 {
                     ListBox_AddString(hListPath, pszFilePath);
+                    PathMap[sHash(pszFilePath)] = pszFilePath;
 
                     std::wstring p = Dos2NTPath(pszFilePath);
-
-                    PathMap[sHash(p.c_str())] = p;
 
                     PMessage msg = (PMessage)malloc(sizeof(Message) + (wcslen(p.c_str()) + 1) * sizeof(wchar_t));
                     if (msg == NULL) break;
                     msg->size = sizeof(Message) + (wcslen(p.c_str()) + 1) * sizeof(wchar_t);
                     msg->type = M_ADD_PATH;
                     msg->AddPath.hash = sHash(p.c_str());
-                    msg->AddPath.length = wcslen(p.c_str());
+                    msg->AddPath.length = wcslen(p.c_str()) * sizeof(wchar_t);
                     wcscpy(msg->AddPath.path, p.c_str());
 
                     UCommunication::GetInstance().SendUCommMessage(msg);
@@ -307,6 +399,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (index != LB_ERR)
             {
                 WCHAR* buffer = new WCHAR[ListBox_GetTextLen(hListPath, index) + 1];
+                memset(buffer, 0, (ListBox_GetTextLen(hListPath, index) + 1) * 2);
                 ListBox_GetText(hListPath, index, buffer);
                 std::wstring p = Dos2NTPath(buffer);
                 PathMap.erase(sHash(p.c_str()));
@@ -326,26 +419,59 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         case IDC_PLAY_BUTTON:
         {
-            //running = !running;
             WatchDog& inst = WatchDog::GetInstance();
             if (!running)
             {
-                inst.CreateDriverService(L"sfwk", L"wKernel.sys");
-                inst.StartDriver(L"sfwk");
+                inst.InstallDriver();
+                inst.StartDriver();
                 Sleep(100);
-                if (inst.RunAndGetExitCode(L"wU-CLI.exe") != STILL_ACTIVE)
+                DWORD r = inst.RunAndGetExitCode(L"wU-CLI.exe");
+                if (r != STILL_ACTIVE)
                 {
-                    MessageBoxW(NULL, L"请确认您选择了正确的适配器，且网络状况正常", L"网络有一些小问题", MB_OK);
-                    inst.StopDriver(L"sfwk");
+                    switch (r)
+                    {
+                    case 1:
+                        MessageBoxW(NULL, L"无法建立与内核的连接，可重启后再次尝试", L"系统有一些小问题", MB_OK);
+                        break;
+                    case 2:
+                        MessageBoxW(NULL, L"请确认您选择了正确的适配器，且网络状况正常", L"网络有一些小问题", MB_OK);
+                        break;
+                    default:
+                        MessageBoxW(NULL, L"请确认电脑的网络状况正常", L"网络有一些小问题", MB_OK);
+                        break;
+                    }
+                    inst.StopDriver();
                     break;
+                }
+                
+                UCommunication::GetInstance().Start();
+
+                if (PathMap.size() > 0)
+                {
+                    for (const auto& i : PathMap)
+                    {
+                        std::wstring p = Dos2NTPath(i.second);
+
+                        PMessage msg = (PMessage)malloc(sizeof(Message) + (wcslen(p.c_str()) + 1) * sizeof(wchar_t));
+                        if (msg == NULL) break;
+                        msg->size = sizeof(Message) + (wcslen(p.c_str()) + 1) * sizeof(wchar_t);
+                        msg->type = M_ADD_PATH;
+                        msg->AddPath.hash = i.first;
+                        msg->AddPath.length = wcslen(p.c_str()) * sizeof(wchar_t);
+                        wcscpy(msg->AddPath.path, p.c_str());
+
+                        UCommunication::GetInstance().SendUCommMessage(msg);
+                        free(msg);
+                    }
                 }
 
                 running = true;
             }
             else
             {
-                inst.StopDriver(L"sfwk");
+                inst.StopDriver();
                 inst.TerminateU();
+                UCommunication::GetInstance().Stop();
 
                 running = false;
             }
@@ -373,7 +499,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DRAWITEM:
     {
         DRAWITEMSTRUCT* pDIS = (DRAWITEMSTRUCT*)lParam;
-        if (pDIS->CtlID == IDC_PLAY_BUTTON) 
+        if (pDIS->CtlID == IDC_PLAY_BUTTON)
         {
             DrawPlayButton(pDIS);
             return TRUE;
@@ -501,7 +627,7 @@ void DrawPlayButton(DRAWITEMSTRUCT* pDIS) {
         DeleteObject(hBrWhite);
         DeleteObject(hPen);
     }
-    
+
 }
 
 void DrawControlButton(DRAWITEMSTRUCT* pDIS, const wchar_t* c)

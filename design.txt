@@ -26,17 +26,17 @@ Filter不建类，只是函数集
 wU-CLI：
 负责接收wK传来的操作，并用udp发出去；负责接收udp来的操作，并执行
 UCCommunication：与内核态通信（收），传给UNetwork
-UNetwork：udp发出去;接收udp，并执行操作
+UNetwork：udp发出去;接收udp，并执行操作 加载adapter名字
 
 1722
 
 wU-GUI：
 负责提供图形化管理界面，配置需要转发的文件路径，udp传输相关。
-UGCommunication：与内核态通信（发）
+UGCommunication：与内核态通信（发） 
 
 gui:
 设置路径
 设置活动网卡
 管理wk和cli的启停
 
-gui：驱动免签、驱动加载log、查看日志
+gui：驱动免签、驱动加载log、查看日志，

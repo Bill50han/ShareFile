@@ -82,8 +82,7 @@ DriverUnload(
     _In_ struct _DRIVER_OBJECT* DriverObject
 )
 {
-    KCommunication::GetInstance().Close();
-    FltUnregisterFilter(gFilterHandle);
+    return;
 }
 
 extern "C" NTSTATUS DriverEntry(

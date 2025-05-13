@@ -5,7 +5,7 @@ Database Database::instance;
 
 void Database::Init()
 {
-	KdPrint(("Database head: %p\n", &head));
+	DbgPrint("Database head: %p\n", &head);
 	//KeInitializeSpinLock(&lHead);
 }
 
@@ -15,6 +15,10 @@ sfresult Database::add(const wchar_t* path, size_t size, size_t hash)
 	while (last->next)
 	{
 		last = last->next;
+		if (last->hash == hash)
+		{
+			return R_OK;
+		}
 	}
 
 	PathList* now = (PathList*)ExAllocatePoolUninitialized(NonPagedPool, size + sizeof(L'\0') + sizeof(PathList) + CmpMemorySize, 'PL');

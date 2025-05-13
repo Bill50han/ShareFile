@@ -4,8 +4,6 @@
 
 Logger logger=Logger(false,true,"clog.txt");    //无终端，打印到文件
 
-extern "C" __declspec(dllexport) volatile bool g_running = true;
-
 void onExit();
 
 int main()
@@ -25,10 +23,11 @@ int main()
 
     atexit(onExit);
 
-    while (g_running)
-    {
-        SwitchToThread();   //实际逻辑在另外两个线程的循环里，主线程只需交出时间片，但别让进程结束就行。
-    }
+    HANDLE hEvent = CreateEventW(NULL, FALSE, FALSE, L"wu-cli-should-close");
+
+    WaitForSingleObject(hEvent, INFINITE);  //等待GUI给予关闭信号
+
+    CloseHandle(hEvent);
 
     return 0;
 }

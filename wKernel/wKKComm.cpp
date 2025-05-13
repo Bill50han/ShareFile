@@ -136,6 +136,84 @@ KCommunication::MessageNotifyCallback(
         case M_QUERY_PATH:
             r = Database::GetInstance().Lock<isIn_l>(buffer->QueryPath.hash);
             break;
+        case M_FILE_CREATE: //因为实际上删除文件等操作也是用create实现的，所以还是得处理这个
+        {
+            //__debugbreak();
+
+            HANDLE hFile = NULL;
+            PFILE_OBJECT FileObj = NULL;
+            OBJECT_ATTRIBUTES objAttr = { 0 };
+            UNICODE_STRING path = { (USHORT)(buffer->Create.EaOffset - 2), (USHORT)buffer->Create.EaOffset , (WCHAR*)(buffer->Create.PathAndEaBuffer) };
+            InitializeObjectAttributes(&objAttr, &path, OBJ_OPENIF | OBJ_KERNEL_HANDLE, NULL, NULL);
+            IO_STATUS_BLOCK ioStatus = { 0 };
+
+            FltCreateFileEx(gFilterHandle,
+                gFilterInstance,
+                &hFile,
+                &FileObj,
+                buffer->Create.DesiredAccess,
+                &objAttr,
+                &ioStatus,
+                &buffer->Create.AllocationSize,
+                buffer->Create.FileAttributes,
+                buffer->Create.ShareAccess,
+                buffer->Create.CreateDisposition,
+                buffer->Create.CreateOptions,
+                (buffer->Create.PathAndEaBuffer + buffer->Create.EaOffset),
+                buffer->Create.EaLength,
+                NULL
+            );
+
+            ObDereferenceObject(FileObj);
+            FltClose(hFile);
+
+            break;
+        }
+        case M_FILE_WRITE:
+        {
+            //__debugbreak();
+
+            HANDLE hFile = NULL;
+            PFILE_OBJECT FileObj = NULL;
+            OBJECT_ATTRIBUTES objAttr = { 0 };
+            UNICODE_STRING path = { (USHORT)(buffer->Write.WriteOffset - 2), (USHORT)buffer->Write.WriteOffset , (WCHAR*)(buffer->Write.PathAndWriteBuffer) };
+            InitializeObjectAttributes(&objAttr, &path, OBJ_OPENIF | OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+            IO_STATUS_BLOCK ioStatus = { 0 };
+
+            FltCreateFileEx(gFilterHandle,
+                gFilterInstance,
+                &hFile,
+                &FileObj,
+                GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                &objAttr,
+                &ioStatus,
+                0,
+                FILE_ATTRIBUTE_NORMAL,
+                0,
+                FILE_OPEN_IF,
+                FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT | FILE_COMPLETE_IF_OPLOCKED,
+                NULL,
+                0,
+                NULL
+            );
+
+            ULONG hasWritten = 0;
+            FltWriteFile(gFilterInstance,
+                FileObj,
+                &buffer->Write.ByteOffset,
+                buffer->Write.Length,
+                (PVOID)(buffer->Write.PathAndWriteBuffer+buffer->Write.WriteOffset),
+                FLTFL_IO_OPERATION_NON_CACHED,
+                &hasWritten,
+                NULL,
+                NULL
+            );
+
+            ObDereferenceObject(FileObj);
+            FltClose(hFile);
+
+            break;
+        }
 
         default:
             r = R_ERROR_FUNC;

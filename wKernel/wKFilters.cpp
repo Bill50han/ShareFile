@@ -3,6 +3,7 @@
 #include "wKKComm.h"
 
 PFLT_FILTER gFilterHandle = NULL;
+PFLT_INSTANCE gFilterInstance = NULL;
 
 const FLT_OPERATION_REGISTRATION Callbacks[] = 
 {
@@ -20,7 +21,7 @@ const FLT_REGISTRATION FilterRegistration =
     NULL,
     Callbacks,
     UnloadCallback,
-    NULL,
+    SetupInstance,
     NULL,
     NULL,
     NULL,
@@ -29,6 +30,17 @@ const FLT_REGISTRATION FilterRegistration =
     NULL,
     NULL
 };
+
+NTSTATUS SetupInstance(
+    _In_ PCFLT_RELATED_OBJECTS FltObjects,
+    _In_ FLT_INSTANCE_SETUP_FLAGS Flags,
+    _In_ DEVICE_TYPE VolumeDeviceType,
+    _In_ FLT_FILESYSTEM_TYPE VolumeFilesystemType
+)
+{
+    gFilterInstance = FltObjects->Instance;
+    return STATUS_SUCCESS;
+}
 
 FLT_PREOP_CALLBACK_STATUS PreCreateCallback(
     _Inout_ PFLT_CALLBACK_DATA Data,
@@ -218,6 +230,9 @@ FLT_PREOP_CALLBACK_STATUS PreWriteCallback(
                 msg->Write.PathAndWriteBuffer[msg->size - 1] = 0;
                 msg->Write.PathAndWriteBuffer[msg->size - 2] = 0;
 
+                DbgPrint("%p %p\n", buffer, msg);
+                //__debugbreak();
+
                 KCommunication::GetInstance().KCommunication::SendKCommMessage(msg);
 
                 __try
@@ -253,5 +268,6 @@ NTSTATUS UnloadCallback(_In_ FLT_FILTER_UNLOAD_FLAGS Flags)
 {
     UNREFERENCED_PARAMETER(Flags);
     FltUnregisterFilter(gFilterHandle);
+    KCommunication::GetInstance().Close();
     return STATUS_SUCCESS;
 }
