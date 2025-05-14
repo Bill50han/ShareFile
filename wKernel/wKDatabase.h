@@ -10,6 +10,9 @@
 
 //这是一簇比较函数的集合，实际运行中只会有其中一个被实际使用。
 bool CmpTrivial(wchar_t*, size_t, const wchar_t*, size_t);	//使用自带的RtlCompareUnicodeString，无需为PathList分配额外空间
+bool CmpPrefix(wchar_t*, size_t, const wchar_t*, size_t);	//RtlCompareUnicodeString，但比较长度均为库中字符串长度，因此可以做到通用前缀匹配
+bool CmpAvx1Prefix(wchar_t* a, size_t asize, const wchar_t* b, size_t bsize);	//显式avx1比较，且通用前缀匹配
+bool CmpAnotherAvx1Prefix(wchar_t* a, size_t asize, const wchar_t* b, size_t bsize);	//一个空间换时间的特殊算法，需要CmpMemorySize=32，通用前缀匹配
 
 class Database
 {

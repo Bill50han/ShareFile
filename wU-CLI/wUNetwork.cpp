@@ -170,6 +170,7 @@ void UNetwork::ReceiverProc()
 
 void UNetwork::ProcessMessage(PMessage msg, size_t length)
 {
+    //__debugbreak();
     if (length < sizeof(Message) || msg->size != length)
     {
         Log("Invalid message received");
@@ -191,13 +192,53 @@ void UNetwork::ProcessMessage(PMessage msg, size_t length)
         std::wstring p = std::wstring((WCHAR*)msg->Write.PathAndWriteBuffer) + L"." + std::to_wstring(std::time(0));
         std::wstring dp = DosPathToNtPath(p);
         Log("向 \"%ws\" 写入内容！(aka. %ws)", p.c_str(), dp.c_str());
-        std::wfstream w(dp.c_str(), std::ios::out | std::ios::binary);
-        //w.seekp(msg->Write.ByteOffset.QuadPart, std::ios::beg);
-        w.imbue(std::locale(std::locale(), "", LC_CTYPE));
-        w << msg->Write.ByteOffset.QuadPart << L"\r\n";
-        w.write((WCHAR*)(msg->Write.PathAndWriteBuffer + msg->Write.WriteOffset), msg->Write.Length);
-        w.flush();
-        w.close();
+
+        //这里不能用wfstream，很奇怪的问题，会导致增量内容无法写入文件
+        HANDLE hFile = CreateFileW(
+            dp.c_str(),
+            GENERIC_WRITE,
+            0,
+            NULL,
+            CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            NULL
+        );
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            Log("CreateFileW失败：%X", GetLastError());
+            return;
+        }
+
+        DWORD bytesWritten = 0;
+        std::string pre = std::to_string(msg->Write.ByteOffset.QuadPart) + "\r\n";
+        BOOL success = WriteFile(
+            hFile,
+            pre.c_str(),
+            (DWORD)pre.size(),
+            &bytesWritten,
+            NULL
+        );
+        if (!success)
+        {
+            Log("WriteFileW失败：%X", GetLastError());
+            CloseHandle(hFile);
+            return;
+        }
+        success = WriteFile(
+            hFile,
+            (msg->Write.PathAndWriteBuffer + msg->Write.WriteOffset),
+            msg->Write.Length,
+            &bytesWritten,
+            NULL
+        );
+        if (!success)
+        {
+            Log("WriteFileW失败：%X", GetLastError());
+            CloseHandle(hFile);
+            return;
+        }
+
+        CloseHandle(hFile);
         break;
     }
     case M_FILE_CREATE:

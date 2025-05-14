@@ -90,23 +90,28 @@ std::wstring Dos2NTPath(const std::wstring inpt)
     return target + inpt.substr(2);
 }
 
-BOOL IsProcessRunning(const WCHAR* processName) {
+BOOL IsProcessRunning(const WCHAR* processName) 
+{
     BOOL exists = FALSE;
     PROCESSENTRY32W entry;
     entry.dwSize = sizeof(PROCESSENTRY32);
 
     // 创建进程快照
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (snapshot == INVALID_HANDLE_VALUE) {
+    if (snapshot == INVALID_HANDLE_VALUE) 
+    {
         Log("快照创建失败，错误: %X\n", GetLastError());
         return FALSE;
     }
 
     // 遍历进程列表
-    if (Process32FirstW(snapshot, &entry)) {
-        do {
+    if (Process32FirstW(snapshot, &entry)) 
+    {
+        do 
+        {
             // 比较进程名（不区分大小写）
-            if (wcscmp(entry.szExeFile, processName) == 0) {
+            if (wcscmp(entry.szExeFile, processName) == 0) 
+            {
                 Log("找到进程");
                 exists = TRUE;
                 break;
